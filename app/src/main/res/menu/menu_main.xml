@@ -1,0 +1,22 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.example.basicnotepad.MainActivity">
+
+    <item
+        android:id="@+id/save_button"
+        android:orderInCategory="1"
+        android:title="Save"
+        android:icon="@drawable/save_icon"
+        app:showAsAction="always"
+        />
+
+    <item
+        android:id="@+id/logout"
+        android:orderInCategory="2"
+        android:title="Save to Backend"
+        android:icon="@drawable/logout_icon"
+        app:showAsAction="always"
+        />
+
+</menu>
