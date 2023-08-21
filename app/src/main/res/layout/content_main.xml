@@ -59,7 +59,7 @@
 
             <com.example.notepadauth.NotePadArea
                 android:gravity="top"
-                android:id="@+id/notepad_input"
+                android:id="@+id/notepad"
                 android:text="@string/notes"
                 android:paddingStart="50dp"
                 android:layout_marginBottom="0dp"

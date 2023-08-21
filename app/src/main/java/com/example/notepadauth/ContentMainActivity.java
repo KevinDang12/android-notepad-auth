@@ -10,6 +10,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -30,43 +31,113 @@ import com.google.android.gms.tasks.Task;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 /**
  * AppCompatActivity containing main content.
  */
 public class ContentMainActivity extends AppCompatActivity {
 
+    /** Save title written by the user */
+    private String title;
+
     /** Saved notes written by the user */
     private String data;
+
+    /** The account id of the user */
+    private String id;
 
     /** Area for the user to write their notes */
     private NotePadArea contentEditText;
 
+    /** Area for the user to write their title */
+    private TitleArea titleArea;
+
     GoogleSignInOptions gso;
     GoogleSignInClient gsc;
+
+    private RetrofitInterface retrofitInterface;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        String BASE_URL = "http://192.168.50.201:5000";
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        retrofitInterface = retrofit.create(RetrofitInterface.class);
+
         setContentView(R.layout.content_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        // Initialize views and perform other setup
-        initView();
 
         gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestEmail().build();
         gsc = GoogleSignIn.getClient(this, gso);
 
         GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
         if (acct != null) {
-            String id = acct.getId();
+            id = acct.getId();
             String firstName = acct.getGivenName();
             String lastName = acct.getFamilyName();
-            Log.d("debug", "Google");
-            Log.d("debug", id);
-            Log.d("debug", firstName);
-            Log.d("debug", lastName);
+            Call<User[]> getNotes = retrofitInterface.getNotes();
+
+            getNotes.enqueue(new Callback<User[]>() {
+                @Override
+                public void onResponse(Call<User[]> call, Response<User[]> response) {
+                    if (response.isSuccessful()) {
+                        assert response.body() != null;
+                        boolean foundUser = false;
+                        for (User note : response.body()) {
+                            if (id.equals(note.getId())) {
+                                Log.d("debug id", id);
+                                Log.d("debug id", note.getId());
+                                foundUser = true;
+                                break;
+                            }
+                        }
+                        if (!foundUser) {
+                            addNewUser(firstName, lastName);
+                        }
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<User[]> call, Throwable t) {
+
+                }
+            });
+
+            Call<User> getNoteById = retrofitInterface.getNoteById(id);
+            getNoteById.enqueue(new Callback<User>() {
+                @Override
+                public void onResponse(Call<User> call, Response<User> response) {
+                    if (response.isSuccessful()) {
+                        assert response.body() != null;
+                        Log.d("debug", response.body().getTitle());
+                        Log.d("debug", response.body().getNote());
+                        title = response.body().getTitle();
+                        data = response.body().getNote();
+                        initView(title, data);
+                        Log.d("debug", "Got the User's Notes");
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<User> call, Throwable t) {
+
+                }
+            });
         }
         AccessToken accessToken = AccessToken.getCurrentAccessToken();
         boolean isLoggedIn = accessToken != null && !accessToken.isExpired();
@@ -79,7 +150,7 @@ public class ContentMainActivity extends AppCompatActivity {
                                 JSONObject object,
                                 GraphResponse response) {
                             try {
-                                String id = object.getString("id");
+                                id = object.getString("id");
                                 String firstName = object.getString("first_name");
                                 String lastName = object.getString("last_name");
                                 Log.d("debug", "Facebook");
@@ -96,6 +167,28 @@ public class ContentMainActivity extends AppCompatActivity {
             request.setParameters(parameters);
             request.executeAsync();
         }
+    }
+
+    private void addNewUser(String firstName, String lastName) {
+        HashMap<String, String> user = new HashMap<>();
+        user.put("id", id);
+        user.put("first_name", firstName);
+        user.put("last_name", lastName);
+        user.put("title", "");
+        user.put("note", "Enter your notes here!");
+        Call<Void> saveNotes = retrofitInterface.saveNotes(user);
+
+        saveNotes.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                Log.d("debug", "Created new Note");
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+
+            }
+        });
     }
 
     @Override
@@ -127,6 +220,7 @@ public class ContentMainActivity extends AppCompatActivity {
         gsc.signOut().addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
+                id = null;
                 LoginManager.getInstance().logOut();
                 startActivity(new Intent(ContentMainActivity.this, MainActivity.class));
                 finish();
@@ -134,9 +228,15 @@ public class ContentMainActivity extends AppCompatActivity {
         });
     }
 
-    private void initView() {
-        this.contentEditText = findViewById(R.id.notepad_input);
-        this.contentEditText.setText(data);
+    private void initView(String title, String data) {
+        this.title = title;
+        this.data = data;
+
+        this.titleArea = findViewById(R.id.title);
+        this.titleArea.setText(this.title);
+
+        this.contentEditText = findViewById(R.id.notepad);
+        this.contentEditText.setText(this.data);
         this.contentEditText.fillScreen();
 
         NotePadTornPage contentImageView = findViewById(R.id.notepad_torn);
@@ -177,7 +277,16 @@ public class ContentMainActivity extends AppCompatActivity {
      *
      * @return text from contentEditText.
      */
-    public String getNotes() {
+    private String getNotes() {
         return Objects.requireNonNull(this.contentEditText.getText()).toString();
+    }
+
+    /**
+     * Return the title that the user typed in.
+     *
+     * @return text from the titleArea.
+     */
+    private String getNotesTitle() {
+        return this.titleArea.getText().toString();
     }
 }
