@@ -120,6 +120,6 @@ public class NotePadArea extends androidx.appcompat.widget.AppCompatEditText {
         }
 
         int paddingLeftX = this.getPaddingLeft();
-        canvas.drawLine(paddingLeftX, getTop(), paddingLeftX, this.getHeight(), this.redLine);
+        canvas.drawLine(paddingLeftX, startY, paddingLeftX, this.getHeight(), this.redLine);
     }
 }
