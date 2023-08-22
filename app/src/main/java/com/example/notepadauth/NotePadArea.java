@@ -88,11 +88,9 @@ public class NotePadArea extends androidx.appcompat.widget.AppCompatEditText {
         int numOfLines = this.getLineCount();
 
         // if numOfLines on the notepad area is equal to 0, add starting lines on the notepad area
-        if (numOfLines != 0) {
-            if (numOfLines < MIN_LINES) {
-                for (int i = numOfLines; i < MIN_LINES; i++) {
-                    lineToAdd.append("\n");
-                }
+        if (numOfLines <= 1) {
+            for (int i = numOfLines; i < MIN_LINES; i++) {
+                lineToAdd.append("\n");
             }
             this.append(lineToAdd.toString());
         }

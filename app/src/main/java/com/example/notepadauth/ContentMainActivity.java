@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
@@ -79,6 +80,12 @@ public class ContentMainActivity extends AppCompatActivity {
         retrofitInterface = retrofit.create(RetrofitInterface.class);
 
         setContentView(R.layout.content_main);
+        this.titleArea = findViewById(R.id.title);
+        this.contentEditText = findViewById(R.id.notepad);
+
+        NotePadTornPage contentImageView = findViewById(R.id.notepad_torn);
+        contentImageView.setLineHeight(this.contentEditText.getLineHeight());
+
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -100,8 +107,6 @@ public class ContentMainActivity extends AppCompatActivity {
                         boolean foundUser = false;
                         for (User note : response.body()) {
                             if (id.equals(note.getId())) {
-                                Log.d("debug id", id);
-                                Log.d("debug id", note.getId());
                                 foundUser = true;
                                 break;
                             }
@@ -124,12 +129,9 @@ public class ContentMainActivity extends AppCompatActivity {
                 public void onResponse(Call<User> call, Response<User> response) {
                     if (response.isSuccessful()) {
                         assert response.body() != null;
-                        Log.d("debug", response.body().getTitle());
-                        Log.d("debug", response.body().getNote());
                         title = response.body().getTitle();
                         data = response.body().getNote();
                         initView(title, data);
-                        Log.d("debug", "Got the User's Notes");
                     }
                 }
 
@@ -153,6 +155,51 @@ public class ContentMainActivity extends AppCompatActivity {
                                 id = object.getString("id");
                                 String firstName = object.getString("first_name");
                                 String lastName = object.getString("last_name");
+
+                                Call<User[]> getNotes = retrofitInterface.getNotes();
+
+                                getNotes.enqueue(new Callback<User[]>() {
+                                    @Override
+                                    public void onResponse(Call<User[]> call, Response<User[]> response) {
+                                        if (response.isSuccessful()) {
+                                            assert response.body() != null;
+                                            boolean foundUser = false;
+                                            for (User note : response.body()) {
+                                                if (id.equals(note.getId())) {
+                                                    foundUser = true;
+                                                    break;
+                                                }
+                                            }
+                                            if (!foundUser) {
+                                                addNewUser(firstName, lastName);
+                                            }
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onFailure(Call<User[]> call, Throwable t) {
+
+                                    }
+                                });
+
+                                Call<User> getNoteById = retrofitInterface.getNoteById(id);
+                                getNoteById.enqueue(new Callback<User>() {
+                                    @Override
+                                    public void onResponse(Call<User> call, Response<User> response) {
+                                        if (response.isSuccessful()) {
+                                            assert response.body() != null;
+                                            title = response.body().getTitle();
+                                            data = response.body().getNote();
+                                            initView(title, data);
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onFailure(Call<User> call, Throwable t) {
+
+                                    }
+                                });
+
                                 Log.d("debug", "Facebook");
                                 Log.d("debug", id);
                                 Log.d("debug", firstName);
@@ -206,7 +253,7 @@ public class ContentMainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.save_button) {
-//            this.saveData();
+            this.saveData();
         }
 
         if (id == R.id.logout) {
@@ -214,6 +261,30 @@ public class ContentMainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void saveData() {
+        title = this.getNotesTitle();
+        data = this.getNotes();
+
+        HashMap<String, String> user = new HashMap<>();
+        user.put("title", title);
+        user.put("note", data);
+
+        Call<Void> updateNotes = retrofitInterface.updateNotes(id, user);
+
+        updateNotes.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                Toast.makeText(ContentMainActivity.this, "Your Notes are Saved!",
+                        Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+
+            }
+        });
     }
 
     private void signOut() {
@@ -232,15 +303,9 @@ public class ContentMainActivity extends AppCompatActivity {
         this.title = title;
         this.data = data;
 
-        this.titleArea = findViewById(R.id.title);
         this.titleArea.setText(this.title);
-
-        this.contentEditText = findViewById(R.id.notepad);
         this.contentEditText.setText(this.data);
         this.contentEditText.fillScreen();
-
-        NotePadTornPage contentImageView = findViewById(R.id.notepad_torn);
-        contentImageView.setLineHeight(this.contentEditText.getLineHeight());
 
         ViewTreeObserver observer = this.contentEditText.getViewTreeObserver();
         observer.addOnGlobalLayoutListener(() -> ContentMainActivity.this.contentEditText.fillScreen());
