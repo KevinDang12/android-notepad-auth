@@ -23,6 +23,12 @@ import com.google.android.gms.tasks.Task;
 
 import java.util.Arrays;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+
 public class MainActivity extends AppCompatActivity {
 
     GoogleSignInOptions gso;
@@ -30,11 +36,20 @@ public class MainActivity extends AppCompatActivity {
     Button googleBtn;
     Button facebookBtn;
     CallbackManager callbackManager;
+    private RetrofitInterface retrofitInterface;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
+
+        String BASE_URL = "http://192.168.50.201:5000";
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        retrofitInterface = retrofit.create(RetrofitInterface.class);
 
         gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestEmail().build();
         gsc = GoogleSignIn.getClient(this, gso);
@@ -62,7 +77,6 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public void onError(FacebookException exception) {
-                    // App code
                     Toast.makeText(getApplicationContext(), "Something went wrong", Toast.LENGTH_SHORT).show();
                 }
             });
@@ -80,8 +94,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void googleSignIn() {
-        Intent signInIntent = gsc.getSignInIntent();
-        startActivityForResult(signInIntent, 1000);
+        Call<Void> getStatus = retrofitInterface.getStatus();
+        getStatus.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    Intent signInIntent = gsc.getSignInIntent();
+                    startActivityForResult(signInIntent, 1000);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Toast.makeText(MainActivity.this, "Unable to sign in with Google. Please try again later.",
+                        Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     @Override
