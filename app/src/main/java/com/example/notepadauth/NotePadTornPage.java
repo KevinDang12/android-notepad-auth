@@ -7,7 +7,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.util.TypedValue;
 
 import androidx.annotation.NonNull;
@@ -90,7 +89,6 @@ public class NotePadTornPage extends androidx.appcompat.widget.AppCompatImageVie
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        /** A bitmap of the torn notepad page ImageView */
         Bitmap bitmap = Bitmap.createBitmap(this.getWidth(), this.getHeight(), Bitmap.Config.ARGB_8888);
         Canvas bitmapCanvas = new Canvas(bitmap);
         super.onDraw(bitmapCanvas);
@@ -105,8 +103,6 @@ public class NotePadTornPage extends androidx.appcompat.widget.AppCompatImageVie
 
         int x = (int) px;
         int y = 0;
-        Log.d("Debug", "ondrawing");
-        Log.d("Debug", "bitmap");
 
         int pixel = bitmap.getPixel(x, y);
         while (pixel == Color.WHITE) {

@@ -2,7 +2,9 @@ package com.example.notepadauth;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -29,19 +31,37 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+/**
+ * The layout for the Login Page for Google and Facebook
+ */
 public class MainActivity extends AppCompatActivity {
 
+    /** Configuration options for Google Sign-In. */
     GoogleSignInOptions gso;
+
+    /** Client to perform Google Sign-In operations. */
     GoogleSignInClient gsc;
+
+    /** Google Login Button */
     Button googleBtn;
+
+    /** Facebook Login Button */
     Button facebookBtn;
-    CallbackManager callbackManager;
+
+    /** Manage the Callbacks for the Facebook SDK */
+    private CallbackManager callbackManager;
+
+    /** REST API Interface */
     private RetrofitInterface retrofitInterface;
+
+    /** Progress Bar Spinner */
+    private ProgressBar spinner;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
+        spinner = findViewById(R.id.loadingBar);
 
         String BASE_URL = "http://192.168.50.201:5000";
         Retrofit retrofit = new Retrofit.Builder()
@@ -56,23 +76,33 @@ public class MainActivity extends AppCompatActivity {
 
         callbackManager = CallbackManager.Factory.create();
 
-        AccessToken accessToken = AccessToken.getCurrentAccessToken();
-        if (accessToken != null && !accessToken.isExpired()) {
-            startActivity(new Intent(MainActivity.this, ContentMainActivity.class));
-            finish();
-        }
-
         LoginManager.getInstance().registerCallback(callbackManager,
             new FacebookCallback<LoginResult>() {
                 @Override
                 public void onSuccess(LoginResult loginResult) {
-                    startActivity(new Intent(MainActivity.this, ContentMainActivity.class));
-                    finish();
+                    Call<Void> getStatus = retrofitInterface.getStatus();
+                    getStatus.enqueue(new Callback<Void>() {
+                        @Override
+                        public void onResponse(Call<Void> call, Response<Void> response) {
+                            if (response.isSuccessful()) {
+                                startActivity(new Intent(MainActivity.this, ContentMainActivity.class));
+                                finish();
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<Void> call, Throwable t) {
+                            Toast.makeText(MainActivity.this, "Unable to sign in with Facebook. Please try again later.",
+                                    Toast.LENGTH_LONG).show();
+                            spinner.setVisibility(View.INVISIBLE);
+                        }
+                    });
                 }
 
                 @Override
                 public void onCancel() {
                     // App code
+                    spinner.setVisibility(View.INVISIBLE);
                 }
 
                 @Override
@@ -84,15 +114,20 @@ public class MainActivity extends AppCompatActivity {
         googleBtn = findViewById(R.id.google_login);
         facebookBtn = findViewById(R.id.facebook_login);
 
-        GoogleSignInAccount acct = GoogleSignIn.getLastSignedInAccount(this);
-        if (acct != null) {
-            navigateToNotepad();
-        }
+        googleBtn.setOnClickListener(view -> {
+            spinner.setVisibility(View.VISIBLE);
+            googleSignIn();
+        });
 
-        googleBtn.setOnClickListener(view -> googleSignIn());
-        facebookBtn.setOnClickListener(view -> LoginManager.getInstance().logInWithReadPermissions(MainActivity.this, Arrays.asList("public_profile", "email")));
+        facebookBtn.setOnClickListener(view -> {
+            spinner.setVisibility(View.VISIBLE);
+            LoginManager.getInstance().logInWithReadPermissions(MainActivity.this, Arrays.asList("public_profile", "email"));
+        });
     }
 
+    /**
+     * Sign-In functionality for Google
+     */
     private void googleSignIn() {
         Call<Void> getStatus = retrofitInterface.getStatus();
         getStatus.enqueue(new Callback<Void>() {
@@ -108,6 +143,7 @@ public class MainActivity extends AppCompatActivity {
             public void onFailure(Call<Void> call, Throwable t) {
                 Toast.makeText(MainActivity.this, "Unable to sign in with Google. Please try again later.",
                         Toast.LENGTH_LONG).show();
+                spinner.setVisibility(View.INVISIBLE);
             }
         });
     }
@@ -124,10 +160,14 @@ public class MainActivity extends AppCompatActivity {
                 navigateToNotepad();
             } catch (ApiException e) {
                 Toast.makeText(getApplicationContext(), "Something went wrong", Toast.LENGTH_SHORT).show();
+                spinner.setVisibility(View.INVISIBLE);
             }
         }
     }
 
+    /**
+     * Navigate to the Notepad Area
+     */
     private void navigateToNotepad() {
         finish();
         Intent intent = new Intent(MainActivity.this, ContentMainActivity.class);

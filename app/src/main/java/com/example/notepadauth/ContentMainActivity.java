@@ -14,7 +14,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
@@ -33,7 +32,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Objects;
 
 import retrofit2.Call;
@@ -43,7 +41,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 /**
- * AppCompatActivity containing main content.
+ * Main Content Activity containing the Title and Notepad
  */
 public class ContentMainActivity extends AppCompatActivity {
 
@@ -62,9 +60,13 @@ public class ContentMainActivity extends AppCompatActivity {
     /** Area for the user to write their title */
     private TitleArea titleArea;
 
+    /** Configuration options for Google Sign-In. */
     GoogleSignInOptions gso;
+
+    /** Client to perform Google Sign-In operations. */
     GoogleSignInClient gsc;
 
+    /** REST API Interface */
     private RetrofitInterface retrofitInterface;
 
     @Override
@@ -85,6 +87,19 @@ public class ContentMainActivity extends AppCompatActivity {
 
         NotePadTornPage contentImageView = findViewById(R.id.notepad_torn);
         contentImageView.setLineHeight(this.contentEditText.getLineHeight());
+
+        // Switch statement checking the value of the action event, if action is equal to ACTION_UP, show the soft
+        // keyboard on screen else don't show the keyboard break
+        View view = findViewById(android.R.id.content);
+        view.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_UP) {
+                v.performClick();
+                showSoftKeyboard(contentEditText);
+            }
+            return true;
+        });
+
+        this.showSoftKeyboard(contentEditText);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -111,36 +126,24 @@ public class ContentMainActivity extends AppCompatActivity {
                                 break;
                             }
                         }
+
                         if (!foundUser) {
+                            Log.d("debug", "Add new User");
                             addNewUser(firstName, lastName);
                         }
+
+                        Log.d("debug", "Get User");
+                        getNoteById();
                     }
                 }
 
                 @Override
                 public void onFailure(Call<User[]> call, Throwable t) {
-
-                }
-            });
-
-            Call<User> getNoteById = retrofitInterface.getNoteById(id);
-            getNoteById.enqueue(new Callback<User>() {
-                @Override
-                public void onResponse(Call<User> call, Response<User> response) {
-                    if (response.isSuccessful()) {
-                        assert response.body() != null;
-                        title = response.body().getTitle();
-                        data = response.body().getNote();
-                        initView(title, data);
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<User> call, Throwable t) {
-
+                    // App code
                 }
             });
         }
+
         AccessToken accessToken = AccessToken.getCurrentAccessToken();
         boolean isLoggedIn = accessToken != null && !accessToken.isExpired();
         if (isLoggedIn) {
@@ -199,11 +202,6 @@ public class ContentMainActivity extends AppCompatActivity {
 
                                     }
                                 });
-
-                                Log.d("debug", "Facebook");
-                                Log.d("debug", id);
-                                Log.d("debug", firstName);
-                                Log.d("debug", lastName);
                             } catch (JSONException e) {
                                 throw new RuntimeException(e);
                             }
@@ -228,12 +226,32 @@ public class ContentMainActivity extends AppCompatActivity {
         saveNotes.enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
-                Log.d("debug", "Created new Note");
+                // App code
             }
 
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
+                // App code
+            }
+        });
+    }
 
+    private void getNoteById() {
+        Call<User> getNoteById = retrofitInterface.getNoteById(id);
+        getNoteById.enqueue(new Callback<User>() {
+            @Override
+            public void onResponse(Call<User> call, Response<User> response) {
+                if (response.isSuccessful()) {
+                    assert response.body() != null;
+                    title = response.body().getTitle();
+                    data = response.body().getNote();
+                    initView(title, data);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<User> call, Throwable t) {
+                // App code
             }
         });
     }
@@ -246,12 +264,8 @@ public class ContentMainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.save_button) {
             this.saveData();
         }
@@ -282,7 +296,7 @@ public class ContentMainActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
-
+                // App code
             }
         });
     }
@@ -291,12 +305,18 @@ public class ContentMainActivity extends AppCompatActivity {
         gsc.signOut().addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
-                id = null;
                 LoginManager.getInstance().logOut();
                 startActivity(new Intent(ContentMainActivity.this, MainActivity.class));
                 finish();
             }
         });
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        gsc.signOut();
+        LoginManager.getInstance().logOut();
     }
 
     private void initView(String title, String data) {
@@ -309,19 +329,6 @@ public class ContentMainActivity extends AppCompatActivity {
 
         ViewTreeObserver observer = this.contentEditText.getViewTreeObserver();
         observer.addOnGlobalLayoutListener(() -> ContentMainActivity.this.contentEditText.fillScreen());
-
-        // Switch statement checking the value of the action event, if action is equal to ACTION_UP, show the soft
-        // keyboard on screen else don't show the keyboard break
-        View view = findViewById(android.R.id.content); // Or use a specific layout container id
-        view.setOnTouchListener((v, event) -> {
-            if (event.getAction() == MotionEvent.ACTION_UP) {
-                v.performClick();
-                showSoftKeyboard(contentEditText);
-            }
-            return true;
-        });
-
-        this.showSoftKeyboard(contentEditText);
     }
 
     /**
