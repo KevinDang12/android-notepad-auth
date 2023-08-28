@@ -32,6 +32,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
 
 import retrofit2.Call;
@@ -112,36 +113,7 @@ public class ContentMainActivity extends AppCompatActivity {
             id = acct.getId();
             String firstName = acct.getGivenName();
             String lastName = acct.getFamilyName();
-            Call<User[]> getNotes = retrofitInterface.getNotes();
-
-            getNotes.enqueue(new Callback<User[]>() {
-                @Override
-                public void onResponse(Call<User[]> call, Response<User[]> response) {
-                    if (response.isSuccessful()) {
-                        assert response.body() != null;
-                        boolean foundUser = false;
-                        for (User note : response.body()) {
-                            if (id.equals(note.getId())) {
-                                foundUser = true;
-                                break;
-                            }
-                        }
-
-                        if (!foundUser) {
-                            Log.d("debug", "Add new User");
-                            addNewUser(firstName, lastName);
-                        }
-
-                        Log.d("debug", "Get User");
-                        getNoteById();
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<User[]> call, Throwable t) {
-                    // App code
-                }
-            });
+            getUsers(firstName, lastName);
         }
 
         AccessToken accessToken = AccessToken.getCurrentAccessToken();
@@ -158,50 +130,8 @@ public class ContentMainActivity extends AppCompatActivity {
                                 id = object.getString("id");
                                 String firstName = object.getString("first_name");
                                 String lastName = object.getString("last_name");
+                                getUsers(firstName, lastName);
 
-                                Call<User[]> getNotes = retrofitInterface.getNotes();
-
-                                getNotes.enqueue(new Callback<User[]>() {
-                                    @Override
-                                    public void onResponse(Call<User[]> call, Response<User[]> response) {
-                                        if (response.isSuccessful()) {
-                                            assert response.body() != null;
-                                            boolean foundUser = false;
-                                            for (User note : response.body()) {
-                                                if (id.equals(note.getId())) {
-                                                    foundUser = true;
-                                                    break;
-                                                }
-                                            }
-                                            if (!foundUser) {
-                                                addNewUser(firstName, lastName);
-                                            }
-                                        }
-                                    }
-
-                                    @Override
-                                    public void onFailure(Call<User[]> call, Throwable t) {
-
-                                    }
-                                });
-
-                                Call<User> getNoteById = retrofitInterface.getNoteById(id);
-                                getNoteById.enqueue(new Callback<User>() {
-                                    @Override
-                                    public void onResponse(Call<User> call, Response<User> response) {
-                                        if (response.isSuccessful()) {
-                                            assert response.body() != null;
-                                            title = response.body().getTitle();
-                                            data = response.body().getNote();
-                                            initView(title, data);
-                                        }
-                                    }
-
-                                    @Override
-                                    public void onFailure(Call<User> call, Throwable t) {
-
-                                    }
-                                });
                             } catch (JSONException e) {
                                 throw new RuntimeException(e);
                             }
@@ -212,6 +142,43 @@ public class ContentMainActivity extends AppCompatActivity {
             request.setParameters(parameters);
             request.executeAsync();
         }
+    }
+
+    /**
+     * Get all the users from the backend server
+     *
+     * @param firstName
+     * @param lastName
+     */
+    private void getUsers(String firstName, String lastName) {
+        Call<List<UserId>> getNotes = retrofitInterface.getUsers();
+
+        getNotes.enqueue(new Callback<List<UserId>>() {
+            @Override
+            public void onResponse(Call<List<UserId>> call, Response<List<UserId>> response) {
+                if (response.isSuccessful()) {
+                    assert response.body() != null;
+                    boolean foundUser = false;
+                    for (UserId userId : response.body()) {
+                        if (id.equals(userId.getId())) {
+                            foundUser = true;
+                            break;
+                        }
+                    }
+
+                    if (!foundUser) {
+                        addNewUser(firstName, lastName);
+                    }
+                    getUserById();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<UserId>> call, Throwable t) {
+                Log.e("Error", "An error occurred: " + t.getMessage());
+                t.printStackTrace();
+            }
+        });
     }
 
     private void addNewUser(String firstName, String lastName) {
@@ -231,13 +198,17 @@ public class ContentMainActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
-                // App code
+                Log.e("Error", "An error occurred: " + t.getMessage());
+                t.printStackTrace();
             }
         });
     }
 
-    private void getNoteById() {
-        Call<User> getNoteById = retrofitInterface.getNoteById(id);
+    /**
+     * Retrieve the User by their ID
+     */
+    private void getUserById() {
+        Call<User> getNoteById = retrofitInterface.getUserById(id);
         getNoteById.enqueue(new Callback<User>() {
             @Override
             public void onResponse(Call<User> call, Response<User> response) {
@@ -251,7 +222,8 @@ public class ContentMainActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<User> call, Throwable t) {
-                // App code
+                Log.e("Error", "An error occurred: " + t.getMessage());
+                t.printStackTrace();
             }
         });
     }
@@ -277,6 +249,9 @@ public class ContentMainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * Save the results of the title and notes to the backend server
+     */
     private void saveData() {
         title = this.getNotesTitle();
         data = this.getNotes();
@@ -296,7 +271,8 @@ public class ContentMainActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
-                // App code
+                Log.e("Error", "An error occurred: " + t.getMessage());
+                t.printStackTrace();
             }
         });
     }
@@ -319,6 +295,12 @@ public class ContentMainActivity extends AppCompatActivity {
         LoginManager.getInstance().logOut();
     }
 
+    /**
+     * Initialize the Title and Notepad area with text
+     *
+     * @param title The text for the Title
+     * @param data The text for the Notepad
+     */
     private void initView(String title, String data) {
         this.title = title;
         this.data = data;

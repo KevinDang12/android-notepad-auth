@@ -1,6 +1,7 @@
 package com.example.notepadauth;
 
 import java.util.HashMap;
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -18,10 +19,10 @@ public interface RetrofitInterface {
     Call<Void> saveNotes(@Body HashMap<String, String> map);
 
     @GET("/api/notes")
-    Call<User[]> getNotes();
+    Call<List<UserId>> getUsers();
 
     @GET("api/notes/{noteId}")
-    Call<User> getNoteById(@Path("noteId") String noteId);
+    Call<User> getUserById(@Path("noteId") String noteId);
 
     @PUT("/api/notes/{noteId}")
     Call<Void> updateNotes(@Path("noteId") String noteId, @Body HashMap<String, String> map);
