@@ -1,5 +1,8 @@
 package com.example.notepadauth;
 
+/**
+ * Class of the User containing their id, title, and notes
+ */
 public class User {
     private String id;
     private String title;
