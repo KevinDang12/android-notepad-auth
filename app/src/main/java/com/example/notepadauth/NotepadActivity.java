@@ -44,7 +44,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 /**
  * Main Content Activity containing the Title and Notepad
  */
-public class ContentMainActivity extends AppCompatActivity {
+public class NotepadActivity extends AppCompatActivity {
 
     /** Save title written by the user */
     private String title;
@@ -70,11 +70,12 @@ public class ContentMainActivity extends AppCompatActivity {
     /** REST API Interface */
     private RetrofitInterface retrofitInterface;
 
+    private final String BASE_URL = "https://notepad.kevindang12.com/";
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        String BASE_URL = "http://192.168.50.201:5000";
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
@@ -82,7 +83,7 @@ public class ContentMainActivity extends AppCompatActivity {
 
         retrofitInterface = retrofit.create(RetrofitInterface.class);
 
-        setContentView(R.layout.content_main);
+        setContentView(R.layout.notepad_activity);
         this.titleArea = findViewById(R.id.title);
         this.contentEditText = findViewById(R.id.notepad);
 
@@ -147,8 +148,8 @@ public class ContentMainActivity extends AppCompatActivity {
     /**
      * Get all the users from the backend server
      *
-     * @param firstName
-     * @param lastName
+     * @param firstName The User's first name
+     * @param lastName The User's last name
      */
     private void getUsers(String firstName, String lastName) {
         Call<List<UserId>> getNotes = retrofitInterface.getUsers();
@@ -265,7 +266,7 @@ public class ContentMainActivity extends AppCompatActivity {
         updateNotes.enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
-                Toast.makeText(ContentMainActivity.this, "Your Notes are Saved!",
+                Toast.makeText(NotepadActivity.this, "Your Notes are Saved!",
                         Toast.LENGTH_LONG).show();
             }
 
@@ -277,12 +278,15 @@ public class ContentMainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Handle the sign out functionality for the notepad app
+     */
     private void signOut() {
         gsc.signOut().addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
             public void onComplete(@NonNull Task<Void> task) {
                 LoginManager.getInstance().logOut();
-                startActivity(new Intent(ContentMainActivity.this, MainActivity.class));
+                startActivity(new Intent(NotepadActivity.this, LoginActivity.class));
                 finish();
             }
         });
@@ -310,7 +314,7 @@ public class ContentMainActivity extends AppCompatActivity {
         this.contentEditText.fillScreen();
 
         ViewTreeObserver observer = this.contentEditText.getViewTreeObserver();
-        observer.addOnGlobalLayoutListener(() -> ContentMainActivity.this.contentEditText.fillScreen());
+        observer.addOnGlobalLayoutListener(() -> NotepadActivity.this.contentEditText.fillScreen());
     }
 
     /**

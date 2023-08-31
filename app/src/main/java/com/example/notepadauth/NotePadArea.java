@@ -22,7 +22,7 @@ public class NotePadArea extends androidx.appcompat.widget.AppCompatEditText {
     private Paint redLine;
 
     /** Minimum number of lines to display on the notepad area */
-    final private static int MIN_LINES = 10;
+    final private static int MIN_LINES = 1;
 
     /**
      * A customized EditText View that fills up the entire screen, allowing the user to type anywhere.

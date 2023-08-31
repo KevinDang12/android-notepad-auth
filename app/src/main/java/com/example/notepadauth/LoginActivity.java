@@ -33,7 +33,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 /**
  * The layout for the Login Page for Google and Facebook
  */
-public class MainActivity extends AppCompatActivity {
+public class LoginActivity extends AppCompatActivity {
 
     /** Configuration options for Google Sign-In. */
     GoogleSignInOptions gso;
@@ -56,13 +56,14 @@ public class MainActivity extends AppCompatActivity {
     /** Progress Bar Spinner */
     private ProgressBar spinner;
 
+    private final String BASE_URL = "https://notepad.kevindang12.com/";
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
         spinner = findViewById(R.id.loadingBar);
 
-        String BASE_URL = "http://192.168.50.201:5000";
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
@@ -84,14 +85,14 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void onResponse(Call<Void> call, Response<Void> response) {
                             if (response.isSuccessful()) {
-                                startActivity(new Intent(MainActivity.this, ContentMainActivity.class));
+                                startActivity(new Intent(LoginActivity.this, NotepadActivity.class));
                                 finish();
                             }
                         }
 
                         @Override
                         public void onFailure(Call<Void> call, Throwable t) {
-                            Toast.makeText(MainActivity.this, "Unable to sign in with Facebook. Please try again later.",
+                            Toast.makeText(LoginActivity.this, "Unable to sign in with Facebook. Please try again later.",
                                     Toast.LENGTH_LONG).show();
                             spinner.setVisibility(View.INVISIBLE);
                         }
@@ -106,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public void onError(FacebookException exception) {
-                    Toast.makeText(getApplicationContext(), "Something went wrong", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "Unable to Sign In", Toast.LENGTH_SHORT).show();
                 }
             });
 
@@ -120,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
 
         facebookBtn.setOnClickListener(view -> {
             spinner.setVisibility(View.VISIBLE);
-            LoginManager.getInstance().logInWithReadPermissions(MainActivity.this, Arrays.asList("public_profile", "email"));
+            LoginManager.getInstance().logInWithReadPermissions(LoginActivity.this, Arrays.asList("public_profile", "email"));
         });
     }
 
@@ -140,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
-                Toast.makeText(MainActivity.this, "Unable to sign in with Google. Please try again later.",
+                Toast.makeText(LoginActivity.this, "Unable to sign in with Google. Please try again later.",
                         Toast.LENGTH_LONG).show();
                 spinner.setVisibility(View.INVISIBLE);
             }
@@ -149,11 +150,10 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        callbackManager.onActivityResult(requestCode, resultCode, data);
         super.onActivityResult(requestCode, resultCode, data);
+        callbackManager.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 1000) {
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
-
             try {
                 task.getResult(ApiException.class);
                 navigateToNotepad();
@@ -169,7 +169,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void navigateToNotepad() {
         finish();
-        Intent intent = new Intent(MainActivity.this, ContentMainActivity.class);
+        Intent intent = new Intent(LoginActivity.this, NotepadActivity.class);
         startActivity(intent);
     }
 }

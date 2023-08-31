@@ -29,4 +29,6 @@
     <string name="Google">Continue with Google</string>
     <string name="Facebook">Continue with Facebook</string>
     <string name="notes">Enter your notes here!</string>
+    <string name="backend_save">Save to Backend</string>
+    <string name="save">Save</string>
 </resources>
