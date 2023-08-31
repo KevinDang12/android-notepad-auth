@@ -16,7 +16,7 @@
         android:theme="@style/Theme.NotepadAuth"
         >
         <activity
-            android:name=".MainActivity"
+            android:name=".LoginActivity"
             android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.NotepadAuth.NoActionBar"
             android:configChanges="orientation|screenSize"
@@ -28,7 +28,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ContentMainActivity"
+            android:name=".NotepadActivity"
             android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.NotepadAuth.NoActionBar"
             android:configChanges="orientation|screenSize"

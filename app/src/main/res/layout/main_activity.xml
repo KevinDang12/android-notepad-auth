@@ -10,7 +10,7 @@
     android:paddingLeft="@dimen/fragment_horizontal_margin"
     android:paddingRight="@dimen/fragment_horizontal_margin"
     android:layout_gravity="center"
-    tools:context=".MainActivity"
+    tools:context=".LoginActivity"
     android:descendantFocusability="afterDescendants"
     android:background="@color/login_background"
     >

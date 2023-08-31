@@ -6,7 +6,7 @@
     <item
         android:id="@+id/save_button"
         android:orderInCategory="1"
-        android:title="Save"
+        android:title="@string/save"
         android:icon="@drawable/save_icon"
         app:showAsAction="always"
         />
@@ -14,7 +14,7 @@
     <item
         android:id="@+id/logout"
         android:orderInCategory="2"
-        android:title="Save to Backend"
+        android:title="@string/backend_save"
         android:icon="@drawable/logout_icon"
         app:showAsAction="always"
         />
