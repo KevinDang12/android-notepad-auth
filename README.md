@@ -5,6 +5,6 @@ It allows user to sign in with Google or Facebook to create and save their notes
 
 The users' notes are also accessible on the React Notepad website, which can be found in this [repository](https://github.com/KevinDang12/react-notepad).
 
-![AndroidLogin](https://github.com/KevinDang12/android-notepad-auth/assets/90794211/496df7f5-cf8b-4f6a-896c-c633f2a5f6dd)
+![AndroidLogin](https://github.com/KevinDang12/android-notepad-auth/assets/90794211/35bb464f-cc76-462c-8267-1bdad2c328cc)
 
-![AndroidNotepad](https://github.com/KevinDang12/android-notepad-auth/assets/90794211/51245acb-640e-4587-af50-50652025d65f)
+![AndroidNotepad](https://github.com/KevinDang12/android-notepad-auth/assets/90794211/99221e29-8785-431a-941c-5ca7cc2789fc)
