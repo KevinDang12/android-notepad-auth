@@ -23,9 +23,7 @@
     <string name="login_options">Sign Up or Log In</string>
 
     <!--  Facebook Login  -->
-    <string name="facebook_app_id">713742283893467</string>
     <string name="fb_login_protocol_scheme">fb1234</string>
-    <string name="facebook_client_token">c370428406b225b2718530a55d89badf</string>
     <string name="Google">Continue with Google</string>
     <string name="Facebook">Continue with Facebook</string>
     <string name="notes">Enter your notes here!</string>
