@@ -9,20 +9,12 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-
-import com.facebook.CallbackManager;
-import com.facebook.FacebookCallback;
-import com.facebook.FacebookException;
-import com.facebook.login.LoginManager;
-import com.facebook.login.LoginResult;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
-
-import java.util.Arrays;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -44,19 +36,13 @@ public class LoginActivity extends AppCompatActivity {
     /** Google Login Button */
     Button googleBtn;
 
-    /** Facebook Login Button */
-    Button facebookBtn;
-
-    /** Manage the Callbacks for the Facebook SDK */
-    private CallbackManager callbackManager;
-
     /** REST API Interface */
     private RetrofitInterface retrofitInterface;
 
     /** Progress Bar Spinner */
     private ProgressBar spinner;
 
-    private final String BASE_URL = "https://notepad.kevindang12.com/";
+    private final String BASE_URL = "http://notepad.kevindang12.com/";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -74,54 +60,11 @@ public class LoginActivity extends AppCompatActivity {
         gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestEmail().build();
         gsc = GoogleSignIn.getClient(this, gso);
 
-        callbackManager = CallbackManager.Factory.create();
-
-        LoginManager.getInstance().registerCallback(callbackManager,
-            new FacebookCallback<LoginResult>() {
-                @Override
-                public void onSuccess(LoginResult loginResult) {
-                    Call<Void> getStatus = retrofitInterface.getStatus();
-                    getStatus.enqueue(new Callback<Void>() {
-                        @Override
-                        public void onResponse(Call<Void> call, Response<Void> response) {
-                            if (response.isSuccessful()) {
-                                startActivity(new Intent(LoginActivity.this, NotepadActivity.class));
-                                finish();
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(Call<Void> call, Throwable t) {
-                            Toast.makeText(LoginActivity.this, "Unable to sign in with Facebook. Please try again later.",
-                                    Toast.LENGTH_LONG).show();
-                            spinner.setVisibility(View.INVISIBLE);
-                        }
-                    });
-                }
-
-                @Override
-                public void onCancel() {
-                    // App code
-                    spinner.setVisibility(View.INVISIBLE);
-                }
-
-                @Override
-                public void onError(FacebookException exception) {
-                    Toast.makeText(getApplicationContext(), "Unable to Sign In", Toast.LENGTH_SHORT).show();
-                }
-            });
-
         googleBtn = findViewById(R.id.google_login);
-        facebookBtn = findViewById(R.id.facebook_login);
 
         googleBtn.setOnClickListener(view -> {
             spinner.setVisibility(View.VISIBLE);
             googleSignIn();
-        });
-
-        facebookBtn.setOnClickListener(view -> {
-            spinner.setVisibility(View.VISIBLE);
-            LoginManager.getInstance().logInWithReadPermissions(LoginActivity.this, Arrays.asList("public_profile", "email"));
         });
     }
 
@@ -151,7 +94,6 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        callbackManager.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 1000) {
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
             try {
