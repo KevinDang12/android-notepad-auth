@@ -70,7 +70,7 @@ public class NotepadActivity extends AppCompatActivity {
     /** REST API Interface */
     private RetrofitInterface retrofitInterface;
 
-    private final String BASE_URL = "https://notepad.kevindang12.com/";
+    private final String BASE_URL = "http://notepad.kevindang12.com/";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
